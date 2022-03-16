@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdint.h>
+#include <string.h>
 
 void usage(FILE *stream)
 {
@@ -9,7 +10,12 @@ void usage(FILE *stream)
     assert(0 && "Not implemented Yet");
 }
 
-void ByteArrayLE_to_uint16 (const char* byteArray, uint16_t* x, size_t offset)
+void ByteArrayLE_to_uint8 (const unsigned char* byteArray, uint8_t* x, size_t offset)
+{
+    *x = (uint8_t)byteArray[offset];
+}
+
+void ByteArrayLE_to_uint16 (const unsigned char* byteArray, uint16_t* x, size_t offset)
 {
   /* casts -before- shifting are necessary to prevent integer promotion 
      and to make the code portable no matter integer size: */
@@ -18,7 +24,18 @@ void ByteArrayLE_to_uint16 (const char* byteArray, uint16_t* x, size_t offset)
        (uint16_t)byteArray[offset + 1] <<  8 ;
 }
 
+void ByteArrayLE_to_uint32 (const unsigned char* byteArray, uint32_t* x, size_t offset)
+{
+  /* casts -before- shifting are necessary to prevent integer promotion 
+     and to make the code portable no matter integer size: */
+
+  *x = (uint32_t)byteArray[offset + 0] <<  0 | 
+       (uint32_t)byteArray[offset + 1] <<  8 |
+       (uint32_t)byteArray[offset + 2] <<  16 |
+       (uint32_t)byteArray[offset + 3] <<  24 ;
+}
 char *slurp_file(const char *file_path, size_t *size)
+
 {
     char *buffer = NULL;
 
@@ -89,12 +106,24 @@ int main(int argc, char **argv)
 
     char *content = slurp_file(image_path, &content_size);
 
-    uint16_t x, y;
+    uint32_t width, height;
+    uint32_t offset_to_pixels;
 
-    for (size_t i = 0; i < 50; i+=2) {
-        ByteArrayLE_to_uint16(content, &x, i);
-        printf("Pos: %zu - Valor: %u\n", i , x);
+    ByteArrayLE_to_uint32((unsigned char *) content, &width, 18);
+    ByteArrayLE_to_uint32((unsigned char *) content, &height, 22);
+
+    ByteArrayLE_to_uint32((unsigned char *) content, &offset_to_pixels, 10);
+
+    uint8_t r,g,b;
+
+    uint32_t inicial_point = offset_to_pixels + 2;
+    uint32_t final_point = inicial_point + (width * height * 3);
+
+    for (size_t i = inicial_point; i < final_point; i+=3)
+    {
+        ByteArrayLE_to_uint8((unsigned char *) content, &r, i);
+        ByteArrayLE_to_uint8((unsigned char *) content, &g, i + 1);
+        ByteArrayLE_to_uint8((unsigned char *) content, &b, i + 2);
     }
-    
     return 0;
 }
