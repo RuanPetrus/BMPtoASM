@@ -109,9 +109,6 @@ uint8_t bmp_to_asm (Pixel pixel)
 	return r | (g << 3) | (b << 6); 
 }
 
-// 010 100 111
-// 	2   4   7
-
 void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height) 
 {
 	 FILE *fptr;
@@ -120,11 +117,13 @@ void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height)
 
 	uint32_t total =  width * height;
 
-	 for (uint32_t i = 0; i < total; i++) {
-		 uint8_t color = bmp_to_asm(pixels[total - i - 1]);
-		 //printf("r: %d g: %d b: %d  color: %d\n", pixels[i].red, pixels[i].green, pixels[i].blue, color);
-		 fprintf(fptr, "%d,", color);
-	 }
+	for (uint32_t j = 0; j < height; j++) {
+		for (uint32_t i = 0; i < width; i++) {
+			uint32_t index = width * (height - j - 1) + i;
+			uint8_t color = bmp_to_asm(pixels[index]);
+			fprintf(fptr, "%d,", color);
+		}
+	}
 
 	fclose(fptr);
 }
@@ -171,7 +170,6 @@ int main(int argc, char **argv)
     }
 
 	pixel_array_to_asm(pixels, width, height);
-
 
 
     return 0;
