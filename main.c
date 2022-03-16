@@ -1,10 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdint.h>
 
 void usage(FILE *stream)
 {
+    (void) stream;
     assert(0 && "Not implemented Yet");
+}
+
+void ByteArrayLE_to_uint16 (const char* byteArray, uint16_t* x, size_t offset)
+{
+  /* casts -before- shifting are necessary to prevent integer promotion 
+     and to make the code portable no matter integer size: */
+
+  *x = (uint16_t)byteArray[offset + 0] <<  0 | 
+       (uint16_t)byteArray[offset + 1] <<  8 ;
 }
 
 char *slurp_file(const char *file_path, size_t *size)
@@ -78,5 +89,12 @@ int main(int argc, char **argv)
 
     char *content = slurp_file(image_path, &content_size);
 
+    uint16_t x, y;
+
+    for (size_t i = 0; i < 50; i+=2) {
+        ByteArrayLE_to_uint16(content, &x, i);
+        printf("Pos: %zu - Valor: %u\n", i , x);
+    }
+    
     return 0;
 }
