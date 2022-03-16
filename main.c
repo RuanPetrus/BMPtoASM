@@ -91,7 +91,43 @@ error:
     return NULL;
 }
 
+typedef struct {
+	uint8_t red, green, blue;
+} Pixel;
 
+float map(float n, float start1, float stop1, float start2, float stop2) 
+{
+	return (n - start1) / (stop1 - start1) * (stop2 - start2) + start2;
+}
+
+uint8_t bmp_to_asm (Pixel pixel) 
+{
+	uint8_t r = (uint8_t) map(pixel.red, 0, 255, 0, 7);
+	uint8_t g = (uint8_t) map(pixel.green, 0, 255, 0, 7);
+	uint8_t b = (uint8_t) map(pixel.blue, 0, 255, 0, 3);
+
+	return r | (g << 3) | (b << 6); 
+}
+
+// 010 100 111
+// 	2   4   7
+
+void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height) 
+{
+	 FILE *fptr;
+	 fptr = fopen("image.s","w");
+	 fprintf(fptr, "teste: .word %d, %d\n.byte ", width, height);
+
+	uint32_t total =  width * height;
+
+	 for (uint32_t i = 0; i < total; i++) {
+		 uint8_t color = bmp_to_asm(pixels[total - i - 1]);
+		 //printf("r: %d g: %d b: %d  color: %d\n", pixels[i].red, pixels[i].green, pixels[i].blue, color);
+		 fprintf(fptr, "%d,", color);
+	 }
+
+	fclose(fptr);
+}
 
 int main(int argc, char **argv)
 {
@@ -119,11 +155,24 @@ int main(int argc, char **argv)
     uint32_t inicial_point = offset_to_pixels + 2;
     uint32_t final_point = inicial_point + (width * height * 3);
 
+	Pixel *pixels = malloc(3 * 8 * width * height); 
+
+	size_t arr_count = 0;
     for (size_t i = inicial_point; i < final_point; i+=3)
     {
-        ByteArrayLE_to_uint8((unsigned char *) content, &r, i);
+        ByteArrayLE_to_uint8((unsigned char *) content, &r, i + 0);
         ByteArrayLE_to_uint8((unsigned char *) content, &g, i + 1);
         ByteArrayLE_to_uint8((unsigned char *) content, &b, i + 2);
+
+		pixels[arr_count].red = r;
+		pixels[arr_count].green = g;
+		pixels[arr_count].blue = b;
+		arr_count++;
     }
+
+	pixel_array_to_asm(pixels, width, height);
+
+
+
     return 0;
 }
