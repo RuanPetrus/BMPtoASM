@@ -7,8 +7,7 @@
 
 void usage(FILE *stream)
 {
-    (void) stream;
-    assert(0 && "Not implemented Yet");
+    fprintf(stream, "USAGE: BMPtoASM <image name>\n");
 }
 
 void ByteArrayLE_to_uint8 (const unsigned char* byteArray, uint8_t* x, size_t offset)
@@ -126,7 +125,14 @@ void strip_ext(char *fname)
 void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height, char* filename) 
 {
 	 FILE *fptr;
+
 	 fptr = fopen(strcat(filename, ".data"),"w");
+    
+    if (fptr == NULL)
+    {
+        fprintf(stderr, "Fail to create image.s file\n");
+        exit(1);
+    }
 
 	 strip_ext(filename);
 	 fprintf(fptr, strcat(filename, ": .word %d, %d\n.byte " ), width, height);
@@ -145,7 +151,8 @@ void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height, char* fi
 int main(int argc, char **argv)
 {
     if (argc < 2) {
-        fprintf(stderr, "Fail to read image\n");
+
+        fprintf(stderr, "ERROR: Expected more arguments\n");
         usage(stderr);
         exit(1);
     }
@@ -176,6 +183,12 @@ int main(int argc, char **argv)
     uint32_t final_point = inicial_point + (width * height * 3) + (height * padding);
 
 	Pixel *pixels = malloc(3 * 8 * width * height); 
+
+    if (pixels == NULL)
+    {
+        fprintf(stderr, "ERROR: Fail to alocate memory\n");
+    }
+    
     memset(pixels, 0, 3 * 8 * width * height);
 
 	size_t arr_count = 0;
@@ -184,7 +197,6 @@ int main(int argc, char **argv)
 		size_t j = i - inicial_point;
 
 		if (padding != 0 && j % (width*3 + padding) >= width*3) {
-			//printf("pulou %zu\n", j);
 			i -= 2;
 			continue;
 		}
@@ -204,7 +216,8 @@ int main(int argc, char **argv)
 	strip_ext(filename);
 	pixel_array_to_asm(pixels, width, height, filename);
 
-    free(content);
 
+    free(pixels);
+    free(content);
     return 0;
 }
