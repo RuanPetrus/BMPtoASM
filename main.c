@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#include <libgen.h>
 
 void usage(FILE *stream)
 {
@@ -109,21 +110,34 @@ uint8_t bmp_to_asm (Pixel pixel)
 	return r | (g << 3) | (b << 6); 
 }
 
-void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height) 
+void strip_ext(char *fname)
+{
+    char *end = fname + strlen(fname);
+
+    while (end > fname && *end != '.') {
+        --end;
+    }
+
+    if (end > fname) {
+        *end = '\0';
+    }
+}
+
+void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height, char* filename) 
 {
 	 FILE *fptr;
-	 fptr = fopen("image.s","w");
-	 fprintf(fptr, "teste: .word %d, %d\n.byte ", width, height);
+	 fptr = fopen(strcat(filename, ".data"),"w");
 
-	uint32_t total =  width * height;
+	 strip_ext(filename);
+	 fprintf(fptr, strcat(filename, ": .word %d, %d\n.byte " ), width, height);
 
-	for (uint32_t j = 0; j < height; j++) {
-		for (uint32_t i = 0; i < width; i++) {
-			uint32_t index = width * (height - j - 1) + i;
-			uint8_t color = bmp_to_asm(pixels[index]);
-			fprintf(fptr, "%d,", color);
-		}
-	}
+    for (uint32_t j = 0; j < height; j++) {
+        for (uint32_t i = 0; i < width; i++) {
+            uint32_t index = width * (height - j - 1) + i;
+            uint8_t color = bmp_to_asm(pixels[index]);
+            fprintf(fptr, "%d,", color);
+        }
+    }
 
 	fclose(fptr);
 }
@@ -131,7 +145,7 @@ void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height)
 int main(int argc, char **argv)
 {
     if (argc < 2) {
-        fprintf(stderr, "Fail to read file\n");
+        fprintf(stderr, "Fail to read image\n");
         usage(stderr);
         exit(1);
     }
@@ -140,6 +154,12 @@ int main(int argc, char **argv)
     char *image_path = argv[1];
 
     char *content = slurp_file(image_path, &content_size);
+
+    if (content == NULL) {
+        fprintf(stderr, "ERROR: not possible to open image: %s\n", image_path);
+        usage(stderr);
+        exit(1);
+    }
 
     uint32_t width, height;
     uint32_t offset_to_pixels;
@@ -152,12 +172,11 @@ int main(int argc, char **argv)
     uint8_t r,g,b;
 
     uint32_t inicial_point = offset_to_pixels;
-	if (inicial_point % 4 != 0) inicial_point += 2;
-    uint32_t final_point = inicial_point + (width * height * 3);
+	uint8_t padding = (4 - ((width * 3) % 4)) % 4;
+    uint32_t final_point = inicial_point + (width * height * 3) + (height * padding);
 
 	Pixel *pixels = malloc(3 * 8 * width * height); 
-
-	uint8_t padding = (4 - ((width * 3) % 4)) % 4;
+    memset(pixels, 0, 3 * 8 * width * height);
 
 	size_t arr_count = 0;
     for (size_t i = inicial_point; i < final_point; i+=3)
@@ -165,29 +184,27 @@ int main(int argc, char **argv)
 		size_t j = i - inicial_point;
 
 		if (padding != 0 && j % (width*3 + padding) >= width*3) {
-			printf("pulou %zu\n", j);
+			//printf("pulou %zu\n", j);
 			i -= 2;
 			continue;
 		}
 
-        ByteArrayLE_to_uint8((unsigned char *) content, &r, i + 0);
+        ByteArrayLE_to_uint8((unsigned char *) content, &b, i + 0);
         ByteArrayLE_to_uint8((unsigned char *) content, &g, i + 1);
-        ByteArrayLE_to_uint8((unsigned char *) content, &b, i + 2);
+        ByteArrayLE_to_uint8((unsigned char *) content, &r, i + 2);
 
 		pixels[arr_count].red = r;
 		pixels[arr_count].green = g;
 		pixels[arr_count].blue = b;
 		arr_count++;
-		//printf("%d %d %d  j:%zu\n", r, g, b, j);
+        // printf("%d %d %d  j:%zu\n", r, g, b, j);
     }
 
-	// pixel_array_to_asm(pixels, width, height);
-	Pixel pixel;
-	pixel.red = 0;
-	pixel.green = 100;
-	pixel.blue = 25;
-	printf("%d", bmp_to_asm(pixel));
+	char* filename = basename(argv[1]);
+	strip_ext(filename);
+	pixel_array_to_asm(pixels, width, height, filename);
 
+    free(content);
 
     return 0;
 }
