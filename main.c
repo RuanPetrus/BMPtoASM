@@ -130,7 +130,7 @@ void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height, char* fi
     
     if (fptr == NULL)
     {
-        fprintf(stderr, "Fail to create image.s file\n");
+        fprintf(stderr, "Fail to create %s file\n", filename);
         exit(1);
     }
 
