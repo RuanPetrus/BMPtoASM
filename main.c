@@ -151,14 +151,25 @@ int main(int argc, char **argv)
 
     uint8_t r,g,b;
 
-    uint32_t inicial_point = offset_to_pixels + 2;
+    uint32_t inicial_point = offset_to_pixels;
+	if (inicial_point % 4 != 0) inicial_point += 2;
     uint32_t final_point = inicial_point + (width * height * 3);
 
 	Pixel *pixels = malloc(3 * 8 * width * height); 
 
+	uint8_t padding = (4 - ((width * 3) % 4)) % 4;
+
 	size_t arr_count = 0;
     for (size_t i = inicial_point; i < final_point; i+=3)
     {
+		size_t j = i - inicial_point;
+
+		if (padding != 0 && j % (width*3 + padding) >= width*3) {
+			printf("pulou %zu\n", j);
+			i -= 2;
+			continue;
+		}
+
         ByteArrayLE_to_uint8((unsigned char *) content, &r, i + 0);
         ByteArrayLE_to_uint8((unsigned char *) content, &g, i + 1);
         ByteArrayLE_to_uint8((unsigned char *) content, &b, i + 2);
@@ -167,9 +178,15 @@ int main(int argc, char **argv)
 		pixels[arr_count].green = g;
 		pixels[arr_count].blue = b;
 		arr_count++;
+		//printf("%d %d %d  j:%zu\n", r, g, b, j);
     }
 
-	pixel_array_to_asm(pixels, width, height);
+	// pixel_array_to_asm(pixels, width, height);
+	Pixel pixel;
+	pixel.red = 0;
+	pixel.green = 100;
+	pixel.blue = 25;
+	printf("%d", bmp_to_asm(pixel));
 
 
     return 0;
