@@ -1,3 +1,7 @@
 BMPconverter
+BMPtoASM
 main
-debug.txt
+*.txt
+*.data
+*.s
+*.bmp
