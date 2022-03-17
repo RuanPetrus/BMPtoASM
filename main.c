@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#include <libgen.h>
 
 void usage(FILE *stream)
 {
@@ -108,10 +109,24 @@ uint8_t bmp_to_asm (Pixel pixel)
 	return r | (g << 3) | (b << 6); 
 }
 
-void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height) 
+void strip_ext(char *fname)
+{
+    char *end = fname + strlen(fname);
+
+    while (end > fname && *end != '.') {
+        --end;
+    }
+
+    if (end > fname) {
+        *end = '\0';
+    }
+}
+
+void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height, char* filename) 
 {
 	 FILE *fptr;
-	 fptr = fopen("image.s","w");
+
+	 fptr = fopen(strcat(filename, ".data"),"w");
     
     if (fptr == NULL)
     {
@@ -119,9 +134,8 @@ void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height)
         exit(1);
     }
 
-	 fprintf(fptr, "teste: .word %d, %d\n.byte ", width, height);
-
-	uint32_t total =  width * height;
+	 strip_ext(filename);
+	 fprintf(fptr, strcat(filename, ": .word %d, %d\n.byte " ), width, height);
 
     for (uint32_t j = 0; j < height; j++) {
         for (uint32_t i = 0; i < width; i++) {
@@ -137,6 +151,7 @@ void pixel_array_to_asm(Pixel* pixels, uint32_t width, uint32_t height)
 int main(int argc, char **argv)
 {
     if (argc < 2) {
+
         fprintf(stderr, "ERROR: Expected more arguments\n");
         usage(stderr);
         exit(1);
@@ -182,7 +197,6 @@ int main(int argc, char **argv)
 		size_t j = i - inicial_point;
 
 		if (padding != 0 && j % (width*3 + padding) >= width*3) {
-            //printf("pulou %zu\n", j);
 			i -= 2;
 			continue;
 		}
@@ -198,7 +212,11 @@ int main(int argc, char **argv)
         // printf("%d %d %d  j:%zu\n", r, g, b, j);
     }
 
-	pixel_array_to_asm(pixels, width, height);
+	char* filename = basename(argv[1]);
+	strip_ext(filename);
+	pixel_array_to_asm(pixels, width, height, filename);
+
+
     free(pixels);
     free(content);
     return 0;
