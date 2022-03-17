@@ -5,8 +5,8 @@ Não testado no GIMP do windows.
 
 Como baixar:  
 Escolha uma das opções:
-    - Baixe a release para a sua plataforma (Windows, POSIX, Linux)  
-    - Baixe o código fonte e rode a ferramenta ```make``` na pasta do repositório.  
+- Baixe a release para a sua plataforma (Windows, POSIX, Linux)  
+- Baixe o código fonte e rode a ferramenta ```make``` na pasta do repositório.  
     
 Como usar:  
 ```BMPtoASM <nome do arquivo>```  
@@ -15,8 +15,8 @@ Será gerado um novo arquivo chamado <nome do arquivo>.data
 
 
 Autores:
-    - Eduardo Freire: https://github.com/duduFreire  
-    - Ruan Petrus: https://github.com/RuanPetrus  
+- Eduardo Freire: https://github.com/duduFreire  
+- Ruan Petrus: https://github.com/RuanPetrus  
 
 Links Úteis:
-    - Link Wikipedia do formato BMP: https://en.wikipedia.org/wiki/BMP_file_format  
+- Link Wikipedia do formato BMP: https://en.wikipedia.org/wiki/BMP_file_format  
