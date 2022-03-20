@@ -16,7 +16,7 @@ Será gerado um novo arquivo chamado <nome do arquivo>.data
 ## Exemplo De Imagens:  
 Original: ![Imagem em BMP](https://raw.githubusercontent.com/RuanPetrus/BMPtoASM/master/example/OriginalImage.bmp)  
     
-RARS: ![Imagem no RARS](https://github.com/RuanPetrus/BMPtoASM/blob/ac9361397cf1b834113edd0ed4d667e45f4e4373/example/RarsImage.png)  
+RARS: ![Imagem no RARS](https://github.com/RuanPetrus/BMPtoASM/blob/master/example/RarsImage.png)  
 
     
 Autores:
